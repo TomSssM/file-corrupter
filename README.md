@@ -2,7 +2,7 @@
 
 ## Description
 
-File Corrupter is a utility to deliberately corrupt files.
+File Corrupter is a utility to deliberately corrupt files
 
 ## Building
 
