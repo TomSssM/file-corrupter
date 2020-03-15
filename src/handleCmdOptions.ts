@@ -1,17 +1,14 @@
-import { OptionDefinition, CommandLineOptions } from 'command-line-args';
-import { CORRUPT_POSITION, CORRUPT_TYPE, CORRUPT_SIZE } from './const';
-import { printError } from './utils';
+import { CommandLineOptions } from 'command-line-args';
+import commandLineUsage from 'command-line-usage';
+import { CORRUPT_POSITIONS, CORRUPT_TYPES, CORRUPT_SIZES } from './const';
+import { printError, colors } from './utils';
+import { sections } from './data';
 
-const verifyCmdOption = (
-    option: unknown,
-    availableOptions: Record<string, any>,
-) => {
-    const values = Object.values(availableOptions);
-
-    if (!values.includes(option)) {
+const verifyCmdOption = (option: unknown, availableOptions: unknown[]) => {
+    if (!availableOptions.includes(option)) {
         const errorMessage = [
             `Unrecognized option: ${option}`,
-            `Available values are: ${values.join(', ')}`,
+            `Available values are: ${availableOptions.join(', ')}`,
         ].join('\n');
         printError(errorMessage);
     }
@@ -21,32 +18,37 @@ export interface CmdOptions {
     size: string;
     type: string;
     pos: string;
+    help: boolean;
+    debug: boolean;
+    file?: string;
 }
 
-export const optionDefinitions: OptionDefinition[] = [
-    { name: 'help', alias: 'h', defaultValue: false, type: Boolean },
-    { name: 'size', alias: 's', defaultValue: CORRUPT_SIZE.BYTE, type: String },
-    { name: 'type', alias: 't', defaultValue: CORRUPT_TYPE.SWAP, type: String },
-    {
-        name: 'pos',
-        alias: 'p',
-        defaultValue: CORRUPT_POSITION.MIDDLE,
-        type: String,
-    },
-    { name: 'debug', defaultValue: false, type: Boolean },
-    { name: 'file', alias: 'f', type: String },
-];
-
 export const verifyCmdOptions = (options: CommandLineOptions): CmdOptions => {
-    const { size, pos, type, file } = options;
+    const { size, pos, type, help, debug, _unknown } = options;
+    const file = _unknown?.[0];
 
-    verifyCmdOption(size, CORRUPT_SIZE);
-    verifyCmdOption(pos, CORRUPT_POSITION);
-    verifyCmdOption(type, CORRUPT_TYPE);
+    verifyCmdOption(size, CORRUPT_SIZES);
+    verifyCmdOption(pos, CORRUPT_POSITIONS);
+    verifyCmdOption(type, CORRUPT_TYPES);
 
-    if (!file) {
-        printError('No file path provided');
+    if (!file && !help) {
+        printError(
+            `No file path provided, run with ${colors.u('--help')} for more`,
+        );
     }
 
-    return options as CmdOptions;
+    return {
+        size,
+        type,
+        pos,
+        help,
+        debug,
+        file,
+    };
+};
+
+const usage = commandLineUsage(sections);
+
+export const renderUsageGuide = () => {
+    console.log(usage);
 };
